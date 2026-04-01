@@ -1,0 +1,50 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+
+int maxSumSubarray(int* arr, int n, int k) {
+    int max_sum = INT_MIN;
+    
+    // O(n^2) approach for the 1D subarray sum <= k
+    // Since n is small (max 100), this is efficient enough.
+    for (int i = 0; i < n; i++) {
+        int current_sum = 0;
+        for (int j = i; j < n; j++) {
+            current_sum += arr[j];
+            if (current_sum <= k) {
+                max_sum = MAX(max_sum, current_sum);
+            }
+            if (max_sum == k) return k; // Optimization
+        }
+    }
+    return max_sum;
+}
+
+int maxSumSubmatrix(int** matrix, int matrixSize, int* matrixColSize, int k) {
+    int rows = matrixSize;
+    int cols = matrixColSize[0];
+    int global_max = INT_MIN;
+
+    // Optimization: Ensure we iterate fewer times by picking smaller dimension for outer loops
+    // Here we assume rows are the vertical constraint
+    for (int left = 0; left < cols; left++) {
+        int row_sums[100] = {0}; // Based on constraints m, n <= 100
+        
+        for (int right = left; right < cols; right++) {
+            for (int i = 0; i < rows; i++) {
+                row_sums[i] += matrix[i][right];
+            }
+            
+            int current_max = maxSumSubarray(row_sums, rows, k);
+            if (current_max != INT_MIN) {
+                global_max = MAX(global_max, current_max);
+            }
+            
+            if (global_max == k) return k;
+        }
+    }
+    
+    return global_max;
+}
