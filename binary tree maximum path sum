@@ -1,0 +1,42 @@
+#include <limits.h>
+#include <math.h>
+
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     struct TreeNode *left;
+ *     struct TreeNode *right;
+ * };
+ */
+
+// Helper to find the maximum of two integers
+int max(int a, int b) {
+    return (a > b) ? a : b;
+}
+
+int calculateGain(struct TreeNode* node, int* maxSum) {
+    if (node == NULL) return 0;
+
+    // Recursively get the max gain from subtrees. 
+    // If a gain is negative, we ignore it (take 0).
+    int leftGain = max(calculateGain(node->left, maxSum), 0);
+    int rightGain = max(calculateGain(node->right, maxSum), 0);
+
+    // Current path sum if this node acts as the "peak" (joining both branches)
+    int currentPathSum = node->val + leftGain + rightGain;
+
+    // Update the global maximum
+    if (currentPathSum > *maxSum) {
+        *maxSum = currentPathSum;
+    }
+
+    // Return the max gain this node provides to its parent (only one branch)
+    return node->val + max(leftGain, rightGain);
+}
+
+int maxPathSum(struct TreeNode* root) {
+    int maxSum = INT_MIN;
+    calculateGain(root, &maxSum);
+    return maxSum;
+}
