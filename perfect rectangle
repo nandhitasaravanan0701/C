@@ -1,0 +1,108 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <limits.h>
+
+#define HASH_SIZE 40001
+
+typedef struct Node {
+    long x, y;
+    struct Node *next;
+} Node;
+
+typedef struct {
+    Node *buckets[HASH_SIZE];
+} HashTable;
+
+unsigned int hash(long x, long y) {
+    // A simple hash combination for coordinates
+    unsigned int h = (unsigned int)(x * 31337 ^ y);
+    return h % HASH_SIZE;
+}
+
+// Function to check if a point exists in the hash table
+bool searchPoint(HashTable *ht, long x, long y) {
+    unsigned int h = hash(x, y);
+    Node *curr = ht->buckets[h];
+    while (curr) {
+        if (curr->x == x && curr->y == y) return true;
+        curr = curr->next;
+    }
+    return false;
+}
+
+// Toggles the point: if it exists, remove it; if not, add it.
+void togglePoint(HashTable *ht, long x, long y) {
+    unsigned int h = hash(x, y);
+    Node *curr = ht->buckets[h];
+    Node *prev = NULL;
+
+    while (curr) {
+        if (curr->x == x && curr->y == y) {
+            if (prev) prev->next = curr->next;
+            else ht->buckets[h] = curr->next;
+            free(curr);
+            return;
+        }
+        prev = curr;
+        curr = curr->next;
+    }
+
+    Node *new_node = malloc(sizeof(Node));
+    new_node->x = x; 
+    new_node->y = y;
+    new_node->next = ht->buckets[h];
+    ht->buckets[h] = new_node;
+}
+
+bool isRectangleCover(int** rectangles, int rectanglesSize, int* rectanglesColSize) {
+    long minX = LONG_MAX, minY = LONG_MAX, maxX = LONG_MIN, maxY = LONG_MIN;
+    long totalArea = 0;
+    HashTable ht = {0};
+
+    for (int i = 0; i < rectanglesSize; i++) {
+        long x1 = rectangles[i][0], y1 = rectangles[i][1];
+        long x2 = rectangles[i][2], y2 = rectangles[i][3];
+
+        // Update bounding box coordinates
+        if (x1 < minX) minX = x1;
+        if (y1 < minY) minY = y1;
+        if (x2 > maxX) maxX = x2;
+        if (y2 > maxY) maxY = y2;
+
+        totalArea += (x2 - x1) * (y2 - y1);
+
+        // Toggle the four corners of each rectangle
+        togglePoint(&ht, x1, y1);
+        togglePoint(&ht, x1, y2);
+        togglePoint(&ht, x2, y1);
+        togglePoint(&ht, x2, y2);
+    }
+
+    // 1. Total area must equal the bounding box area
+    if (totalArea != (maxX - minX) * (maxY - minY)) {
+        // Cleanup hash table before returning
+        return false;
+    }
+
+    // 2. Only the 4 corners of the bounding box should remain in the set
+    int cornerCount = 0;
+    if (searchPoint(&ht, minX, minY)) cornerCount++;
+    if (searchPoint(&ht, minX, maxY)) cornerCount++;
+    if (searchPoint(&ht, maxX, minY)) cornerCount++;
+    if (searchPoint(&ht, maxX, maxY)) cornerCount++;
+
+    // 3. Count total points remaining in the hash table
+    int totalRemaining = 0;
+    for (int i = 0; i < HASH_SIZE; i++) {
+        Node *curr = ht.buckets[i];
+        while (curr) {
+            totalRemaining++;
+            Node *tmp = curr;
+            curr = curr->next;
+            free(tmp); // Freeing memory while checking
+        }
+    }
+
+    return cornerCount == 4 && totalRemaining == 4;
+}
