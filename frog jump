@@ -1,0 +1,42 @@
+#include <stdbool.h>
+
+bool canCross(int* stones, int stonesSize) {
+    
+    if (stones[1] != 1) return false;
+
+    
+    bool dp[2000][2001] = {false};
+    
+    
+    dp[1][1] = true;
+
+    for (int i = 1; i < stonesSize; i++) {
+        for (int k = 1; k <= i; k++) {
+            if (dp[i][k]) {
+               
+                for (int nextJump = k - 1; nextJump <= k + 1; nextJump++) {
+                    if (nextJump <= 0) continue;
+
+                    long nextPos = (long)stones[i] + nextJump;
+                    
+                    
+                    for (int j = i + 1; j < stonesSize; j++) {
+                        if (stones[j] == nextPos) {
+                            dp[j][nextJump] = true;
+                            if (j == stonesSize - 1) return true; 
+                            break;
+                        }
+                        if (stones[j] > nextPos) break; d
+                    }
+                }
+            }
+        }
+    }
+
+    
+    for (int k = 0; k < stonesSize; k++) {
+        if (dp[stonesSize - 1][k]) return true;
+    }
+
+    return false;
+}
