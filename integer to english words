@@ -1,0 +1,68 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+char* ones[] = {"", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", 
+                "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"};
+char* tens[] = {"", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"};
+char* thousands[] = {"", "Thousand", "Million", "Billion"};
+
+void helper(int n, char* res) {
+    if (n == 0) return;
+    
+    if (n >= 100) {
+        strcat(res, ones[n / 100]);
+        strcat(res, " Hundred ");
+        helper(n % 100, res);
+    } else if (n >= 20) {
+        strcat(res, tens[n / 10]);
+        strcat(res, " ");
+        helper(n % 10, res);
+    } else {
+        strcat(res, ones[n]);
+        strcat(res, " ");
+    }
+}
+
+char* numberToWords(int num) {
+    if (num == 0) return "Zero";
+
+    
+    char* res = (char*)malloc(1000 * sizeof(char));
+    res[0] = '\0';
+    
+    int i = 0;
+    char temp_res[1000];
+    
+    
+    long n = num;
+    int group_idx = 0;
+
+    
+    int parts[4]; // Max 4 parts for 2^31-1 (Billion, Million, Thousand, Ones)
+    for(int j = 0; j < 4; j++) {
+        parts[j] = n % 1000;
+        n /= 1000;
+    }
+
+    for(int j = 3; j >= 0; j--) {
+        if (parts[j] == 0) continue;
+        
+        char chunk[200] = "";
+        helper(parts[j], chunk);
+        
+        strcat(res, chunk);
+        if (j > 0) {
+            strcat(res, thousands[j]);
+            strcat(res, " ");
+        }
+    }
+
+    
+    int len = strlen(res);
+    while(len > 0 && res[len-1] == ' ') {
+        res[--len] = '\0';
+    }
+
+    return res;
+}
