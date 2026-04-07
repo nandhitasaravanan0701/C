@@ -1,0 +1,61 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+char** fullJustify(char** words, int wordsSize, int maxWidth, int* returnSize) {
+    char** result = malloc(sizeof(char*) * wordsSize);
+    int resIdx = 0;
+    int i = 0;
+
+    while (i < wordsSize) {
+        int lineLen = strlen(words[i]);
+        int j = i + 1;
+        
+        
+        while (j < wordsSize && lineLen + 1 + strlen(words[j]) <= maxWidth) {
+            lineLen += 1 + strlen(words[j]);
+            j++;
+        }
+
+        char* line = (char*)malloc(maxWidth + 1);
+        int numWords = j - i;
+        int currentPos = 0;
+
+        
+        
+        if (j == wordsSize || numWords == 1) {
+            for (int k = i; k < j; k++) {
+                strcpy(line + currentPos, words[k]);
+                currentPos += strlen(words[k]);
+                if (currentPos < maxWidth) line[currentPos++] = ' ';
+            }
+            while (currentPos < maxWidth) line[currentPos++] = ' ';
+        } 
+        else {
+            int totalChars = 0;
+            for (int k = i; k < j; k++) totalChars += strlen(words[k]);
+            
+            int totalSpaces = maxWidth - totalChars;
+            int spaceSlots = numWords - 1;
+            int spacePerSlot = totalSpaces / spaceSlots;
+            int extraSpaces = totalSpaces % spaceSlots;
+
+            for (int k = i; k < j; k++) {
+                strcpy(line + currentPos, words[k]);
+                currentPos += strlen(words[k]);
+                
+                if (k < j - 1) { 
+                    int spacesToApply = spacePerSlot + (extraSpaces-- > 0 ? 1 : 0);
+                    for (int s = 0; s < spacesToApply; s++) line[currentPos++] = ' ';
+                }
+            }
+        }
+
+        line[maxWidth] = '\0';
+        result[resIdx++] = line;
+        i = j; // Move to the next set of words
+    }
+
+    *returnSize = resIdx;
+    return result;
+}
