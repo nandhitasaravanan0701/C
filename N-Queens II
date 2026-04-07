@@ -1,0 +1,40 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+void solve(int row, int n, int* cols, int* diag1, int* diag2, int* count) {
+    if (row == n) {
+        (*count)++;
+        return;
+    }
+
+    for (int col = 0; col < n; col++) {
+       
+        if (!cols[col] && !diag1[row - col + n - 1] && !diag2[row + col]) {
+            
+            cols[col] = diag1[row - col + n - 1] = diag2[row + col] = 1;
+
+            solve(row + 1, n, cols, diag1, diag2, count);
+
+            
+            cols[col] = diag1[row - col + n - 1] = diag2[row + col] = 0;
+        }
+    }
+}
+
+int totalNQueens(int n) {
+    int count = 0;
+    
+  
+    int* cols = (int*)calloc(n, sizeof(int));
+    int* diag1 = (int*)calloc(2 * n, sizeof(int));
+    int* diag2 = (int*)calloc(2 * n, sizeof(int));
+
+    solve(0, n, cols, diag1, diag2, &count);
+
+    
+    free(cols);
+    free(diag1);
+    free(diag2);
+
+    return count;
+}
