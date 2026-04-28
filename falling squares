@@ -1,0 +1,42 @@
+#include <stdlib.h>
+
+/**
+ * Note: The returned array must be malloced, assume caller calls free().
+ */
+int* fallingSquares(int** positions, int positionsSize, int* positionsColSize, int* returnSize) {
+    int* heights = (int*)malloc(positionsSize * sizeof(int));
+    int* ans = (int*)malloc(positionsSize * sizeof(int));
+    *returnSize = positionsSize;
+    int maxTallest = 0;
+
+    for (int i = 0; i < positionsSize; i++) {
+        int left = positions[i][0];
+        int size = positions[i][1];
+        int right = left + size;
+        int baseHeight = 0;
+
+        // Check all previous squares for overlap
+        for (int j = 0; j < i; j++) {
+            int prevLeft = positions[j][0];
+            int prevRight = prevLeft + positions[j][1];
+            
+            // Overlap condition: left1 < right2 AND left2 < right1
+            if (left < prevRight && prevLeft < right) {
+                if (heights[j] > baseHeight) {
+                    baseHeight = heights[j];
+                }
+            }
+        }
+
+        heights[i] = baseHeight + size;
+        
+        // Update global tallest stack recorded so far
+        if (heights[i] > maxTallest) {
+            maxTallest = heights[i];
+        }
+        ans[i] = maxTallest;
+    }
+
+    free(heights);
+    return ans;
+}
