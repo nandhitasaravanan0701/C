@@ -1,0 +1,69 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+#include <limits.h>
+
+typedef long long ll;
+
+ll createPalindrome(ll prefix, int isEven) {
+    ll res = prefix;
+    ll temp = isEven ? prefix : prefix / 10;
+    while (temp > 0) {
+        res = res * 10 + (temp % 10);
+        temp /= 10;
+    }
+    return res;
+}
+
+char* nearestPalindromic(char* n) {
+    int len = strlen(n);
+    ll num = atoll(n);
+    
+    // Handle single digit case
+    if (num <= 10) {
+        char* res = (char*)malloc(3 * sizeof(char));
+        sprintf(res, "%lld", num - 1);
+        return res;
+    }
+
+    ll candidates[5];
+    // Case 1 & 2: Boundary edge cases
+    candidates[0] = (ll)pow(10, len - 1) - 1;
+    candidates[1] = (ll)pow(10, len) + 1;
+
+    // Case 3, 4, 5: Mirroring prefix, prefix-1, prefix+1
+    int prefixLen = (len + 1) / 2;
+    char prefixStr[20];
+    strncpy(prefixStr, n, prefixLen);
+    prefixStr[prefixLen] = '\0';
+    ll prefix = atoll(prefixStr);
+
+    candidates[2] = createPalindrome(prefix, len % 2 == 0);
+    candidates[3] = createPalindrome(prefix - 1, len % 2 == 0);
+    candidates[4] = createPalindrome(prefix + 1, len % 2 == 0);
+
+    // If prefix-1 reduced the number of digits (e.g., prefix 10 -> 9)
+    // we need to re-handle the mirroring logic correctly
+    if (len % 2 == 0 && prefix - 1 < pow(10, prefixLen - 1)) {
+        candidates[3] = createPalindrome(prefix - 1, 0); // it effectively becomes odd length logic
+    }
+
+    ll minDiff = LLONG_MAX;
+    ll result = 0;
+
+    for (int i = 0; i < 5; i++) {
+        if (candidates[i] == num) continue;
+        ll diff = llabs(candidates[i] - num);
+        if (diff < minDiff) {
+            minDiff = diff;
+            result = candidates[i];
+        } else if (diff == minDiff) {
+            if (candidates[i] < result) result = candidates[i];
+        }
+    }
+
+    char* finalRes = (char*)malloc(25 * sizeof(char));
+    sprintf(finalRes, "%lld", result);
+    return finalRes;
+}
