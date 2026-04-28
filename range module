@@ -1,0 +1,88 @@
+#include <stdbool.h>
+#include <stdlib.h>
+
+typedef struct {
+    int left;
+    int right;
+} Interval;
+
+typedef struct {
+    Interval* ranges;
+    int size;
+} RangeModule;
+
+RangeModule* rangeModuleCreate() {
+    RangeModule* obj = (RangeModule*)malloc(sizeof(RangeModule));
+    obj->ranges = NULL;
+    obj->size = 0;
+    return obj;
+}
+
+void rangeModuleAddRange(RangeModule* obj, int left, int right) {
+    int new_size = 0;
+    Interval* next_ranges = (Interval*)malloc((obj->size + 1) * sizeof(Interval));
+    int i = 0;
+    
+    while (i < obj->size && obj->ranges[i].right < left) {
+        next_ranges[new_size++] = obj->ranges[i++];
+    }
+    
+    while (i < obj->size && obj->ranges[i].left <= right) {
+        if (obj->ranges[i].left < left) left = obj->ranges[i].left;
+        if (obj->ranges[i].right > right) right = obj->ranges[i].right;
+        i++;
+    }
+    next_ranges[new_size++] = (Interval){left, right};
+    
+    while (i < obj->size) {
+        next_ranges[new_size++] = obj->ranges[i++];
+    }
+    
+    free(obj->ranges);
+    obj->ranges = next_ranges;
+    obj->size = new_size;
+}
+
+bool rangeModuleQueryRange(RangeModule* obj, int left, int right) {
+    int l = 0, r = obj->size - 1;
+    while (l <= r) {
+        int mid = l + (r - l) / 2;
+        if (obj->ranges[mid].left <= left && obj->ranges[mid].right >= right) return true;
+        if (obj->ranges[mid].left > left) r = mid - 1;
+        else l = mid + 1;
+    }
+    return false;
+}
+
+void rangeModuleRemoveRange(RangeModule* obj, int left, int right) {
+    int new_size = 0;
+    // Removing can split one interval into two, so we need space for size + 1
+    Interval* next_ranges = (Interval*)malloc((obj->size + 1) * sizeof(Interval));
+    
+    for (int i = 0; i < obj->size; i++) {
+        if (obj->ranges[i].right <= left || obj->ranges[i].left >= right) {
+            next_ranges = realloc(next_ranges, (new_size + 1) * sizeof(Interval));
+            next_ranges[new_size++] = obj->ranges[i];
+        } else {
+            if (obj->ranges[i].left < left) {
+                next_ranges = realloc(next_ranges, (new_size + 1) * sizeof(Interval));
+                next_ranges[new_size++] = (Interval){obj->ranges[i].left, left};
+            }
+            if (obj->ranges[i].right > right) {
+                next_ranges = realloc(next_ranges, (new_size + 1) * sizeof(Interval));
+                next_ranges[new_size++] = (Interval){right, obj->ranges[i].right};
+            }
+        }
+    }
+    
+    free(obj->ranges);
+    obj->ranges = next_ranges;
+    obj->size = new_size;
+}
+
+void rangeModuleFree(RangeModule* obj) {
+    if (obj) {
+        free(obj->ranges);
+        free(obj);
+    }
+}
