@@ -1,0 +1,48 @@
+#include <stdbool.h>
+#include <string.h>
+#include <ctype.h>
+
+bool isValid(char* code) {
+    int n = strlen(code), top = 0;
+    char stack[500][10]; // To store TAG_NAMEs (max length 9)
+    
+    for (int i = 0; i < n; ) {
+        // 1. Rule: Code must be wrapped in a closed tag
+        if (i > 0 && top == 0) return false;
+
+        // 2. Handle CDATA
+        if (strncmp(code + i, "<![CDATA[", 9) == 0) {
+            if (top == 0) return false; // CDATA must be inside a tag
+            char* end_cdata = strstr(code + i, "]]>");
+            if (!end_cdata) return false;
+            i = (end_cdata - code) + 3;
+        } 
+        // 3. Handle End Tag
+        else if (strncmp(code + i, "</", 2) == 0) {
+            char* end_bracket = strchr(code + i, '>');
+            if (!end_bracket || top == 0) return false;
+            int len = end_bracket - (code + i + 2);
+            if (len < 1 || len > 9 || strncmp(stack[--top], code + i + 2, len) != 0 || stack[top][len] != '\0') return false;
+            i = (end_bracket - code) + 1;
+        } 
+        // 4. Handle Start Tag
+        else if (code[i] == '<') {
+            char* end_bracket = strchr(code + i, '>');
+            if (!end_bracket) return false;
+            int len = end_bracket - (code + i + 1);
+            if (len < 1 || len > 9) return false;
+            for (int k = 0; k < len; k++) {
+                if (!isupper(code[i + 1 + k])) return false;
+                stack[top][k] = code[i + 1 + k];
+            }
+            stack[top++][len] = '\0';
+            i = (end_bracket - code) + 1;
+        } 
+        // 5. Handle Plain Text
+        else {
+            if (top == 0) return false;
+            i++;
+        }
+    }
+    return top == 0;
+}
